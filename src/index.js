@@ -37,8 +37,32 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
+const { Bonjour } = require('bonjour-service');
+
 // Listen on 0.0.0.0 to be accessible on local network
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);
-  console.log(`Ensure you connect via your Mac's local IP address from other devices.`);
+
+  // Publish Bonjour service with a unique name to avoid conflicts
+  const bonjour = new Bonjour();
+  const uniqueName = `mac-control-api-${Math.floor(Math.random() * 10000)}`;
+  const service = bonjour.publish({ name: uniqueName, type: 'http', port: PORT, host: 'mac-control-api.local' });
+
+  service.on('error', (err) => {
+    console.error('Bonjour publish error:', err.message);
+  });
+
+  console.log(`Bonjour service published! You can now access the backend at http://mac-control-api.local:${PORT}`);
+
+  // Cleanup Bonjour on exit
+  const cleanup = () => {
+    bonjour.unpublishAll(() => {
+      bonjour.destroy();
+      process.exit();
+    });
+  };
+
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+  process.on('SIGUSR2', cleanup); // for nodemon restarts
 });
