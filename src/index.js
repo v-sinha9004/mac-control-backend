@@ -53,16 +53,12 @@ app.listen(PORT, '0.0.0.0', () => {
   });
 
   console.log(`Bonjour service published! You can now access the backend at http://mac-control-api.local:${PORT}`);
+});
 
-  // Cleanup Bonjour on exit
-  const cleanup = () => {
-    bonjour.unpublishAll(() => {
-      bonjour.destroy();
-      process.exit();
-    });
-  };
-
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
-  process.on('SIGUSR2', cleanup); // for nodemon restarts
+// Force exit on nodemon restarts and terminal kills
+['SIGINT', 'SIGTERM', 'SIGUSR2'].forEach(signal => {
+  process.on(signal, () => {
+    console.log(`Received ${signal}, forcing exit`);
+    process.exit(0);
+  });
 });
