@@ -44,7 +44,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);
 
   // Publish Bonjour service with a unique name to avoid conflicts
-  const bonjour = new Bonjour();
+  const bonjour = new Bonjour({}, (err) => {
+    console.error('Internal Bonjour error:', err.message);
+  });
   const uniqueName = `mac-control-api-${Math.floor(Math.random() * 10000)}`;
   const service = bonjour.publish({ name: uniqueName, type: 'http', port: PORT, host: 'mac-control-api.local' });
 
